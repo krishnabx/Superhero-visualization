@@ -1,0 +1,659 @@
+---
+title: "**Gender representation in Superhero Universe**"
+author: "Krishna Barfiwala"
+output: 
+  pdf_document: default
+  html_document:
+    df_print: paged
+header-includes:
+    #- \usepackage{dvipsnames}
+    - \usepackage{titling}
+    - \pretitle{\begin{center}
+      \includegraphics[width=9in,height=2in]{superheroes_image.jpg}\LARGE\\}
+    - \posttitle{\end{center}}
+    - \usepackage{sectsty}
+    - \allsectionsfont{\color{blue!50!black}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r warnings ignore, include=FALSE}
+options(dplyr.summarise.inform = FALSE, warning = FALSE, message = FALSE)
+
+```
+
+```{r graphic, knitr::include_graphics}
+```
+
+# 1. Problem Statement
+Superheroes! Did you too just think about all the male superheroes? Typically, when one imagines superheroes, the image that comes to mind is that of a male character. Despite 13 years of the Marvel Cinematic Universe (MCU), only two out of the 25 films produced have featured a female actress as the main protagonist. Despite the long history of male-dominated superhero universes, the recent surge in popularity of female superheroes has challenged traditional gender roles and expectations in the genre. The rise of female superheroes in popular culture is an important and timely issue that deserves similar importance. 
+
+In this project, we aim to explore the representation of gender in the superhero universe and examine the difference between the male and female superheroes on the basis of various factors. The Superhero Characters and Powers dataset holds details about numerous superheroes originating from diverse storylines and fictional universes and it also describes various physical, mental parameter and supernatural abilities that are considered while creating a character. Our aim is to analyse how the male and female superheroes differ through some features like:
+
+* Examining the differences in gender balance amongst superheroes
+* Comparing superhero capabilities in terms of physical, mental and supernatural abilities
+* Investigating the world of women superheroes
+
+The ultimate goal of this report is to provide a comprehensive analysis of the representation of gender in the superhero universe and to contribute to the ongoing conversation about the role of women in popular culture. 
+
+
+## 1.1 About the Dataset: 
+The dataset provides information about the origin of the characters that include the creators, universe, collections, their alignment (good / bad / neutral) etc. It also gives information about the physical abilities of the character including the power, strength, speed, durability in numeric form. Apart from this, some super powers of the characters are also available, that include super powers, omnipresent, omnipotent, and so on.
+
+Some other variables provided are: 
+
+* Level : power level or class of the superheroes
+* Combat : superheroes capabilities in action rated from (0-100)
+* Gender : Male/ Female
+* Member : are they a member of any groups like avengers etc ? 
+* Species : what kind of race (human, alien etc) do they belong to ?
+* Tier: Superhero's power or class
+* Relatives : any known past, current, future relatives of the superheroes
+* Place_of_birth : where were the superheroes born ?
+* Occupation : what is the superhero's main job
+
+The dataset can be found here : https://www.kaggle.com/datasets/baraazaid/superherodb
+
+# 2. Section 1: - Examining the differences in gender balance amongst superheroes
+
+```{r working_directory, include=FALSE}
+setwd("G:/My Drive/1. My Masters course/2. Computation and Visualization/Assignments/Hackathon/IE6600-Sec-1-Group6-Hackathon")
+getwd()
+
+```
+
+```{r Libraries, include= FALSE}
+library(dplyr)
+library(stringr)
+library(corrplot)
+library(ggplot2)
+library(reshape2)
+library(scales)
+library(tidyverse)
+library(tidyr)
+library(gridExtra)
+library(magrittr)
+#install.packages("plotrix")
+#install.packages("fmsb")
+library(plotrix)
+library(fmsb)
+library(grid)
+library(RColorBrewer)
+#install.packages("wordcloud")
+library(wordcloud)
+#install.packages("tm")
+library(tm)
+library(vcd)
+library(stringr)
+# install.packages("ggwordcloud")
+# install.packages("devtools")
+# devtools::install_github("lepennec/ggwordcloud")
+library(ggwordcloud)
+library(ggpubr)
+ 
+```
+
+In this section we aim to understand if there exists some kind of gender preference in the superhero universe. First, we will try to get an estimate of gender ratios that exist based on an overall level, then we will segregate this ratio further based on the "Alignment" - whether a superhero is Good, Bad or Neutral. We would also look at the preference of gender by the creators.
+
+**2.1 What is the distribution of female and male characters that are created?**
+```{r Section 1 viz 1, warning= FALSE, fig.align = "center", out.height = "70%", out.width = "70%", echo = FALSE}
+#out.height = "80%", out.width = "80%", 
+sup_df <- read.csv('Superheroes.csv')
+
+#dim(sup_df)
+
+sup_df<- distinct(sup_df)
+
+#dim(sup_df[duplicated(sup_df),])[1]
+
+df_pie <- subset(sup_df, Gender == "Male" | Gender == "Female", select = c("Gender"))
+
+males <- sum(df_pie$gender == "Male")
+females <- sum(df_pie$gender == "Female")
+counts <- table(df_pie$Gender)
+
+# Create a new column "count" in the data frame and assign the count values
+df_pie$count <- counts[df_pie$Gender]
+df_unique <- df_pie[!duplicated(df_pie), ]
+df_unique <- df_unique %>% 
+             mutate(Percentage = round((count/sum(count))*100.00))
+
+# # Create the 3D pie chart
+
+pos<- pie3D(df_unique$Percentage, 
+      radius = 0.75,
+      height = 0.1,
+      theta = 0.7,
+      border = "black",
+      col = c("#6663A3", "#FF7673"),
+      shade = 1,
+      labels = paste(df_unique$Percentage, "%"),
+      labelcol = "black",
+      labelcex = 0.75,
+      explode = 0.05, 
+      #mgp = c(4,3,3), 
+      mar=c(0,0.25,2,0.25),
+      main = "Fig (2.1) Percentage of Male and Female Superheroes"
+      ) + theme(plot.title = element_text(face = "plain"))
+
+legend(0.3, 0.7, df_unique$Gender, cex = 0.7, fill = c("#6663A3", "#FF7673"), bty="n")
+
+# pos
+# pos[1]<-2.5
+# pos[2]<-5.6
+
+
+```
+  The above pie chart suggests that there are more males sperheroes than females. Around 27% are females and 73% are males. Hence, the numbers indicate that there is a significant imbalance in the creation of male and female superheroes. When we looked at the overall numbers , we found that till date a total of 13717 male characters have been created and a total of 4973 female characters have been created. We will see later in the report, if the quantity of males is really impactful or not. 
+  
+ Having observed the distribution of the male and female superheroes, next question that comes to the mind is that if female superheroes are given one type of alignment more than the other. Note that here, Alignment refers to the moral alignment of the superheroes in terms of the "Good, Bad (Evil) or Neutral. This may be useful in many ways, for example, if a disproportionate number of female characters are portrayed as evil, this could suggest a broader pattern in the way women are portrayed in superhero stories.                
+  
+**2.2 What is the distribution of moral alignments among female superheroes compared to male superheroes?**  
+   
+   Having established that female superheroes are less represented than male superheroes, we want to now understand how are female super heroes depicted in terms of the moral alignments. Are female superheroes given the role of villain most frequently or the space is dominated by males ?
+ 
+  By comparing the representation of moral alignments between male and female superheroes, it can help highlight areas where representation needs to improve and where there may be room for more empowering and positive representation of female superheroes.
+
+
+```{r Section 1 viz 2, warning= FALSE , out.height = "80%", out.width = "80%", fig.align = "center", echo = FALSE}
+#sup_df <- read.csv('Superheroes.csv')
+sup_df$Alignment <- na_if(sup_df$Alignment, "-")
+sup_df$Alignment <- na_if(sup_df$Alignment, "")
+sup_df$Alignment <- na_if(sup_df$Alignment, "None")
+
+sup_df<- sup_df %>% filter(!row_number() %in% grep("Alignment", sup_df$Alignment, ignore.case=FALSE))
+
+sup_df$Gender <- na_if(sup_df$Gender, "-")
+
+sup_df$Gender <- na_if(sup_df$Gender, "Other")
+sup_df$Gender <- na_if(sup_df$Gender, "None")
+
+align_grp <- sup_df %>% group_by(Alignment, Gender) %>%
+            dplyr:: summarise(Count_heroes = n()) 
+
+align_na<- na.omit(align_grp)   
+
+align_na <- align_na%>% 
+            group_by(Alignment) %>%
+            mutate(Percent_contribution = (Count_heroes/sum(Count_heroes)))
+
+positions <- c("Bad", "Neutral", "Good")
+
+ggplot(align_na, aes(x = Alignment, y = Percent_contribution, fill = Gender)) +
+  geom_col(position = "fill", colour = "black") + 
+  scale_fill_manual(values = c("#FF7673", "#6663A3")) +
+  scale_y_continuous(labels = scales::percent) + 
+  scale_x_discrete(limits = positions) +
+  ylab("Percentage") + ggtitle("Fig(2.2) Variation of Alignment based on gender in superheroes") +
+  geom_text(aes(label= paste(round(Percent_contribution*100),"%")),
+             position=position_stack(vjust=0.5), size = 3) + 
+              theme(panel.grid.major = element_blank(), 
+                    panel.grid.minor = element_blank(),
+                    panel.background = element_blank(), 
+                    axis.line = element_line(colour = "black"),
+                    plot.title = element_text(face="bold", size=12))
+
+
+#ffb347
+#916860
+#249EA0
+```
+
+
+ Based on the above stacked bar chart, we can infer that male super heroes have the highest contribution in the "Bad" alignment. Although there is unequal representation of female characters across the alignments, Female have the highest percentage contribution in "Good" alignment. This suggests that Female characters are more preferred to display "Good" character than "Bad" or "Neutral".
+
+
+**2.3 What is the preferred gender of superheroes created by different creators? **
+
+  Creation of a superhero may depend on many factors including the audience preferences, the story as well as character traits. However, while creating these characters, are females considered equal to male or there is some preference order ingrained in the mind of creators ?
+ 
+ Understanding the preference of gender by creators can provide valuable insights into the representation and portrayal of gender in the superhero universe. It can help to determine if there is any disparity in the representation of male and female characters. 
+ 
+ This information can be useful in promoting diversity and gender equality in the superhero universe, and also in raising awareness about the importance of having a balanced representation of different genders in media. 
+
+```{r Section 1 viz 3, warning= FALSE ,out.height = "80%", out.width = "80%", echo = FALSE}
+
+creator_df <- subset(sup_df, (Gender == "Male" | Gender == "Female"), 
+                     select = c("Gender", "Creator"))
+              
+creator_df$Creator <- na_if(creator_df$Creator, "None")
+
+creator_df<- na.omit(creator_df)
+
+creator_df$Creator <- str_trim(creator_df$Creator, side='both')
+
+create_wider <- creator_df %>%
+              count(Creator, Gender) %>%
+              pivot_wider(names_from = Gender,
+                          values_from = n, values_fill = list(n = 0)) 
+
+create_wider$Total_heros <- create_wider$Male + create_wider$Female 
+
+create_wider <- create_wider %>% arrange(desc(Male), desc(Female))
+
+creator_top <- head(create_wider,10)
+
+creator_top$Female_perc <- (creator_top$Female/ creator_top$Total_heros) 
+creator_top$Male_perc <- (creator_top$Male/ creator_top$Total_heros)
+
+##########
+
+creator_top = creator_top[, -which(names(creator_top) %in% c("Female","Male"))]
+
+colnames(creator_top)[colnames(creator_top) == "Female_perc"] <- "Female"
+colnames(creator_top)[colnames(creator_top) == "Male_perc"] <- "Male"
+
+###############
+
+creator_long <-  creator_top %>% 
+                 pivot_longer(cols = c(Female, Male), names_to = "Gender", 
+                              values_to = "Percentage")
+
+
+ggplot(creator_long,aes(x=Creator, y = ifelse(Gender == "Male", round(Percentage*100), -round(Percentage*100)), fill=Gender)) +
+  geom_bar(stat="identity", position="identity", color = "black")+
+  scale_y_continuous(limits = c(-45, max(round(creator_long$Percentage*100.00)))) +
+  geom_text(aes(label= paste0(round(Percentage*100), '%')), 
+            position = position_stack(vjust = 0.5)) +
+  scale_fill_manual(values = c("#FF7673", "#6663A3")) +
+  ggtitle("Fig(2.3) Preference of male Vs female superheroes by Creators") +
+  theme()+
+  coord_flip() +
+  #xlab("") +
+  xlab("Top 10 Creators by the total number of characters created") +
+  theme_bw() +
+  theme(
+        axis.text=element_text(size=8, face="bold"), 
+        panel.grid.major = element_blank(), 
+        axis.text.x=element_blank(), 
+        axis.title.x=element_blank(), 
+        panel.border=element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        #axis.line = element_blank()) + 
+        axis.line = element_blank(),
+        plot.title = element_text(face="bold", size=12)) 
+        #+scale_fill_discrete(labels=c('Female', 'Male'))
+
+
+
+```
+   
+   For the purpose of this analysis, we looked into top 10 creators of superheroes based on the total number of superheroes created. Then, we plotted a visualization depicting the distribution of superheroes created by gender.
+  
+  Yet again in the above plot, the distribution of males and females is unequally distributed with male superheroes dominating the females, in number. The Y axis represent the top 10 creator entities that created the superheroes. Riot Games created the most number of female superheroes, approx 43%.  Shueisha created 20% of females and 80% males. IDW Publishing and Cartoon Network created approx 17% of females and 83% males. However, no creator amongst the top 10 creators have preferred making female superheroes the most. This suggests that male continue to dominate the creators most preferred gender. 
+
+
+**Question 2.4 Is there some disparity in the power level of male and female superheroes ?**
+ 
+  Superheroes are known for their fighting abilities. Hence, it is imperative to compare if both male and female superheroes are given a similar power or there exists some disparity.
+  
+```{r Section 1 viz 4, warning= FALSE , echo = FALSE}
+
+##data cleaning
+col_list <- c("Class_value")
+
+for (col in col_list){
+  sup_df[col]  <- lapply(sup_df[col], as.numeric)
+}
+
+sup_df$Gender <- na_if(sup_df$Gender, "-")
+
+sup_df$Gender <- na_if(sup_df$Gender, "Other")
+sup_df$Gender <- na_if(sup_df$Gender, "None")
+
+
+df_viol= data.frame(sup_df$Class_value,sup_df$Gender)   
+#creating a new df for violin chart
+df_viol<- na.omit(df_viol) 
+#deleting the NA values
+df_viol= df_viol %>%                            #Renaming the column names
+  rename(Level= sup_df.Class_value,
+         Gender= sup_df.Gender)
+
+## creating a 3 plie plot
+p <- ggplot(df_viol, aes(x=Gender, y=log(Level),fill=Gender)) + 
+  geom_violin() +
+   stat_summary(fun.y=mean, geom='point', shape=23, size=2)
+p = p+ scale_fill_manual(values=c("#FF7673", "#6663A3"))
+p = p +labs(title="(Fig 2.4) Power of Male and Female Superheroes ",
+        x ="Gender", y = "Log(Power)") 
+
+p= p + theme(
+plot.title = element_text(color="red", size=14, face="bold.italic"),
+axis.title.x = element_text(color="blue", size=14, face="bold"),
+axis.title.y = element_text(color="#993333", size=14, face="bold")) +
+  theme_classic() + theme(plot.title = element_text(face="bold", size=12))
+
+p
+
+```
+   
+   The above Violin plot shows the spread of the Superheroes power. The width of both curves corresponds with the approximate frequency of data points in each Gender.The spread of both the genders seem the same with almost the same mean, marked by the point in the Violin plot. The shape of the distribution, skinny on the lower end and pointed towards the above end, indicates the Power of the superheroes are concentrated in the lower end. There is almost similar spread amongst the power of both Males and Females with respect to Superpower.
+
+
+# 3. Section 2- Comparing superhero capabilities in terms of physical, mental and supernatural abilities
+
+ Having observed a disparity in representation and preference of female super heroes over male by moral alignment and by creators yet observing a similar power level, we want to dig more deeper into the analysis and understand if male superheroes given better physical, mental and supernatural abilities than female superheroes. 
+ 
+Studying the female superheroes can be significant for many reasons like:  
+
+ * Positive role models for women and girls can help to challenge gender stereotypes by showing that women can be strong, powerful and capable of being heroes. 
+ * Encourage other females to be more confident, determined and resilient and to strive to make the world a better place. 
+ 
+ We want to investigate if gender somehow influences the abilities of superheroes. The type of questions we want to answer through this section is:  
+ 
+  * Are physical abilities similar irrespective of gender ? 
+  * Are female superheroes given better mental powers than males ? 
+  * What is the disparity of superpowers with respect to gender ?
+ 
+**Question 3.1 Are physical abilities similar irrespective of gender ?**
+
+Comparing the physical abilities of male and female characters can highlight instances where female characters are given less impressive physical abilities, or are depicted as weaker or less capable than their male counterparts. This can be an indication of persistent gender stereotypes and the under-representation of female characters in positions of power or with significant physical abilities.
+
+  Through this analysis, we want to analyse the numerical physical capabilities of superheroes, given between 1-100. The definitions of each variables is as under: 
+  
+  * Combat : superhero's proficiency in combat
+  * Power : superhero's overall power level
+  * Durability : superhero's ability to withstand damage
+  * Strength: superhero's state of being being physically strong
+  * Speed : superhero's speed
+  
+Through these numerical variables, we want to understand if there are some significant differences in the physical abilities of male Vs females superheroes
+
+```{r Section 2 viz 1, warning= FALSE , echo = FALSE}
+
+
+phy_df <- subset(sup_df, (Gender == "Male" | Gender == "Female"), 
+                     select = c("Gender", "Power", "Combat", "Durability", "Strength", "Speed"))
+
+
+col_list <- c("Power", "Combat", "Durability", "Strength", "Speed")
+
+for (col in col_list){
+  phy_df[col]  <- lapply(phy_df[col], as.numeric)
+  
+}
+
+phy_grp <- phy_df %>%
+           group_by(Gender) %>%
+           summarise(Power = round(mean(Power)), Combat = round(mean(Combat)), 
+                     Durability = round(mean(Durability)),
+                     Strength = round(mean(Strength)), Speed = round(mean(Speed)))
+
+max_df <- phy_df %>%
+           summarise(Power = max(Power), Combat = max(Combat), 
+                     Durability = max(Durability),
+                     Strength = max(Strength), Speed = max(Speed))
+
+rownames(max_df) <- c("max")
+
+
+min_df <- phy_df %>%
+           summarise(Power = min(Power), Combat = min(Combat), 
+                     Durability = min(Durability),
+                     Strength = min(Strength), Speed = min(Speed))
+
+rownames(min_df) <- c("min")
+
+rownames(phy_grp) <- phy_grp$Gender
+
+phy_grp <- phy_grp %>% select("Power", "Combat", "Durability", "Strength", "Speed")
+
+row.names(phy_grp) <- c("Female", "Male") 
+
+  
+  
+phy_grp <- rbind(max_df, min_df, phy_grp)
+
+
+colors_fill <- c(scales::alpha("#FF7673", 0.3),
+                 scales::alpha("#6663A3", 0.3))
+
+# Define line colors
+colors_line <- c(scales::alpha("#FF7673", 0.8),
+                scales::alpha("#6663A3", 0.8))
+
+
+y_lab <-  seq(0, 100, 25)
+# Create plot
+radarchart(phy_grp, 
+           seg = 4,  # Number of axis segments
+           title = "Fig (3.1) Comparing Physical capabilities of Females Vs Males",
+           pcol = colors_line,
+           pfcol = colors_fill,
+           plwd = 4,axislabcol = "black",
+           caxislabels = y_lab, caxislabsize = 0.5, axistype = 1) 
+# Add a legend
+legend(x=0.6, 
+       y=1.35, 
+       legend = rownames(phy_grp[-c(1,2),]), 
+       bty = "n", pch=20 , col = colors_line, cex = 1.05, pt.cex = 3.5)
+
+
+```
+   
+   (Fig 3.1) suggests that the physical capabilities of both male and female superheroes are similar.From the Spyder chart, we can observe that the mean values for all the abilities are almost similar for males and females. Strength being on a higher side for males.
+   
+   This suggests us that the creators are not creating weak female superheroes. This is a positive sign of equal representation and inclusiveness in the superhero stories. It can suggest that the creators of the characters are making a conscious effort to challenge gender stereotypes and to depict female characters as strong, capable, and equal to their male counterparts.
+
+
+**Question 3.2 Are female superheroes given better mental abilities than males ?**
+ 
+   Now that we have established that female superheroes are equivalent in terms of physical abilities, we also want to compare the mental abilities w.r.t gender. We have seen in many super hero movies that many female superheroes are shown to be emotionally more susceptible to the scenario. It may be possible that because of this, the creators have placed their mental abilities power lower than the male superheroes. For analyzing the mental abilities of men and women, we have constructed a box plot. 
+ 
+ The definitions of IQ and intelligence is given below: 
+ [reference](https://www.merriam-webster.com/dictionary/intelligence)
+
+ * IQ : It is a score which is used to compare relative intelligence of a person, in our case, superheroes 
+ * Intelligence : Intelligence is a broad term that refers to a person's cognitive ability, or their ability to learn, understand, and apply information. Intelligence can encompass many different aspects of mental ability, including reasoning, problem-solving, memory, and creativity
+ 
+ We would like to discuss this through the box plot below
+
+```{r Section 2 viz 2, warning= FALSE , echo = FALSE}
+
+col_list <- c("IQ", "Intelligence")
+
+for (col in col_list){
+  sup_df[col]  <- lapply(sup_df[col], as.numeric)
+  
+}
+
+df_mental <- subset(sup_df, Gender == "Male" | Gender == "Female", select = c("Gender", "IQ", "Intelligence"))
+df_mental$IQ <- log(df_mental$IQ)
+#str(df_mental)
+ # create a 1x2 plot array
+set.seed(1)  
+# IQ box plot
+p1 <- ggplot(df_mental, aes(x=Gender, y=IQ, fill = Gender)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("#FF7673", "#6663A3")) +
+  labs(x="Gender", y="IQ", caption = "Fig 3.2(b)") +
+  ggtitle("Gender vs IQ") +
+  theme_classic()
+
+
+# Intelligence box plot
+p2 <- ggplot(df_mental, aes(x=Gender, y=Intelligence, fill = Gender)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("#FF7673", "#6663A3")) +
+  labs(x="Gender", y="Intelligence",caption = "Fig 3.2(b)" ) +
+  ggtitle("Gender vs Intelligence") +
+  theme_classic() 
+
+grid.arrange(p1,p2, ncol = 2, top=text_grob("Fig(3.2) Comparing Mental abilities in Males and Female superheroes", size = 12, face = "bold"))
+
+```
+  
+  From Fig 3.2,comparing the metrics of mental ability : IQ and Intelligence, the range for IQ for males is a bit larger than females but the mean of both the IQs is almost similar. Looking at the intelligence, it is observed that the Intelligence is slightly higher for males. We can see there are many outliers in the dataset, marked by dots in the plot. 
+  
+  From this, we can infer that males may be given slightly higher intelligence levels by creator. Creators may be catering to audience expectations and beliefs about gender, where male characters are more likely to be portrayed as intellectually superior to female characters.
+
+**Question 3.3 What is the disparity of superpowers with respect to gender ?**
+ 
+ From this analysis we want to see of male and female superheroes are given different set of super powers. Having a diverse range of superpowers can make for more interesting and dynamic storytelling. From this analysis we want to answer questions like - if female superheroes are given more mental superpowers ? Do male and female have similar top superpowers?
+
+```{r Section 2 viz 3, warning= FALSE , echo = FALSE}
+
+df_super <- select(sup_df, c( "Super_powers", "Gender") )
+df_su <- subset(df_super, Gender == "Male" | Gender == "Female")
+df_sep <- df_su %>%
+  separate_rows(Super_powers, sep=",")
+df_group <- df_sep %>%
+  group_by(Super_powers, Gender) %>%
+  summarize(count = n()) 
+
+#################################################
+
+
+df_group_male <- subset(df_group, Gender == "Male")
+df_group_female <- subset(df_group, Gender == "Female")
+
+df_group_male$count <- (df_group_male$count - min(df_group_male$count)) / (max(df_group_male$count) - min(df_group_male$count))
+
+df_group_female$count <- (df_group_female$count - min(df_group_female$count)) / (max(df_group_female$count) - min(df_group_female$count))
+
+df_m <- df_group_male %>%
+  arrange(desc(count)) %>%
+  head(10)
+df_f <- df_group_female %>%
+  arrange(desc(count)) %>%
+  head(10)
+
+
+p1 <- ggplot(df_f, aes(x = Gender, y = reorder(Super_powers,count), fill = count)) +
+  geom_tile(colour = "black") +
+  scale_fill_gradient(low = "#ffbab9", high = "#e56a67") +
+  labs(y = "Super Power ", fill = "Normalized Count", caption = "Fig 3.3(a)") +
+  ggtitle("Super Powers for Female ")
+
+
+p2 <- ggplot(df_m, aes(x = Gender, y = reorder(Super_powers,count), fill = count)) +
+  geom_tile(colour = "black") +
+  scale_fill_gradient(low = "#9391be", high = "#474572") +
+  labs(y = "Super Power", fill = "Normalized Count", caption = "Fig 3.3(b)") +
+  ggtitle("Super Powers for Male ")
+
+grid.arrange(p1,p2, ncol = 2, top=text_grob("Fig(3.3) Comparing Top 10 Superpowers of Male and Female superheroes", size = 12, face = "bold"))
+##6663A3
+
+```
+  
+   The heatmap for Super powers and their count (normalised) shows the powers possessed by the heroes. Darker shade indicates more number of superheroes utilising the superpower, and lighter shade indicates less number of superheroes utilising that power. Agility, Reflexes, Endurance, Stamina are the top super powers possessed by both male and female superheroes. Apart from that, Females do possess master martial arts and accelerated healing skills indicating the healing and fighting skills for females. Males possessing weapons master skills indicating the multipurpose use of weapons by men.
+
+
+# 4. Section 3- Investigating the world of women superheroes
+
+In the previous two sections, it was established that there is a noticeable disparity in the representation of female superheroes compared to male superheroes. However, there is a limited distinction between the physical, mental, and supernatural abilities of female and male superheroes. This leads us to the question of evaluating the efficiency of female superheroes and determining who among them are the most physically capable. It is important to note that physical abilities are not the only indicators of a superhero's efficiency. Mental and supernatural abilities, as well as their means of fighting, i.e. weapons are also equally important. To determine the top physically efficient female superheroes, several factors must be taken into consideration, such as strength, speed, durability, endurance, and combat skills and if they use a weapon. To that end, we want to focus this section on analyzing the female superheroes and try to understand how efficient the female super heroes are and who are the top physically efficient women ?
+
+
+**Question 4.1 What is the proportion of women superheroes who use weapon as compared to those who dont?**
+
+  We have always seen in superhero movies, that most Superheroes (male) have a certain weapon. From Captain America's Shield to Spider-Man's Web Shooters, superheroes are shown with weapons as it not only adds a wonder-factor to the audience but also makes the superheroes more equipped for combat. In this analysis, we want to analyse if there are significant number of women who use weapon ? Through this we maybe able to answer questions like - if more number of female super heroes use weapons, does that make them more stronger ?
+
+
+```{r Section 3 viz 1, warning= FALSE , echo = FALSE}
+df_weapons <- subset(sup_df, Gender == "Female", select = c("Equipment","Gender"))
+df_clean <- df_weapons[!df_weapons$Equipment=="",]
+df_equip <- df_clean %>%
+  separate_rows(Equipment, sep=",")
+df_equip_n <- df_equip %>%
+  group_by(Gender) %>%
+  summarize(count=n())
+colnames(df_equip_n) <- c("Gender_1", "count_1")
+df_empty <- df_weapons[df_weapons$Equipment=="",] 
+df_empty_f <- df_empty %>%
+  group_by(Gender) %>%
+  summarize(count=n())
+colnames(df_empty_f) <- c("Gender_2", "count_2")
+
+df_combined_equip <- data.frame(df_equip_n$count_1, df_empty_f$count_2)
+colnames(df_combined_equip) <- c("count_1", "count_2")
+
+ggplot(data = df_combined_equip, aes(x = 1, y = count_1, fill = "count_1")) + 
+  geom_bar(stat = "identity", width = 0.5) + 
+  geom_bar(aes(x = 2, y = count_2, fill = "count_2"), stat = "identity", width = 0.5, position = "identity") + 
+  scale_x_discrete(limits = c(1, 2), labels = c("No of Females with weapon", "No of Females without weapon")) + 
+  scale_fill_manual(values = c("count_1" = "#ffacab", "count_2" = "#FF7673")) + 
+  labs(x = "", y="", fill = "") + 
+  theme_bw() + 
+  ggtitle("Fig.(4.1) Bar chart for Female superheroes who fight with or without weapon")  +
+  geom_text(aes(x = 1, y = count_1, label = count_1), vjust = -0.5, size = 4) +
+  geom_text(aes(x = 2, y = count_2, label = count_2), vjust = -0.5, size = 4) +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=12), 
+        legend.position = "none", 
+        plot.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank())
+
+ # ggtitle("Representing the count of females who use equipments and who don't use equipments")
+
+
+```
+
+  From Fig 4.1. we can observe that the number of females using equipment are as low as negligible while the majority of the females are without any equipment. This suggests that the physical abilities in female super heroes are inherent and not acquired through the use of weapon. 
+  
+**Question 4.2 Who are the top 50 Female Superheroes ?**
+ 
+ Having established that female super heroes are as powerful as male superheroes, in the final step of the analysis we want to focus on these female characters. For the purpose of the analysis we want to showcase the top 50 female characters in terms of their physical abilities.
+ 
+```{r Section 3 viz 2, warning= FALSE , echo = FALSE}
+
+df_top <- subset(sup_df, Gender == "Female", select = c("Character","Gender","Power", "Combat", "Durability", "Strength", "Speed"))
+
+col_list <- c("Power", "Combat", "Durability", "Strength", "Speed")
+
+for (col in col_list){
+  df_top[col]  <- lapply(df_top[col], as.numeric)
+}
+
+
+df_sum <- df_top %>% mutate (sum = Power + Combat + Durability + Strength + Speed )
+df_sum_count <- select(df_sum, c("Character", "sum")) 
+df_sum_count <- unique(df_sum_count)
+df_top_10 <- df_sum_count %>%
+  arrange(desc(sum)) %>%
+  head(50) %>%
+  select(Character, sum)
+
+df_top_10$value <- as.numeric(row.names(df_top_10))
+df_top_10$new_val <- df_top_10$sum - df_top_10$value
+
+
+df_top_10$new_char <- str_split(df_top_10$Character, "\\(", simplify=T)[,1]
+
+df_new <- as.data.frame(
+  apply(df_top_10,2, function(x) gsub("\\s+", "", x)))
+df_new$new_char <- gsub("\\(.*?\\)", "", df_new$new_char)
+
+set.seed(123)
+ggplot(data = df_top_10, aes(label = new_char, size = new_val, 
+        color = factor(sample.int(10, nrow(df_top_10), replace = TRUE)))) + 
+  geom_text_wordcloud() +
+  scale_color_brewer(palette = "Paired", direction = -1) +
+  theme_minimal() +
+  ggtitle("Fig.(4.2) Word cloud of top 50 female Superheroes characters") +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=12))
+
+```
+
+  The above word cloud in Fig 4.2 contains the name of the top 50 female characters on the basis of various factors like power, durability, combat, speed, strength. This shows that there are a lot of female characters similar to male superheroes. Few of the top female superheroes are Lady Bernkastel, Eva-Beautrice, Wonder Woman, and Eternity Girl.
+  
+# 5. Conclusion
+
+  Our analysis showed that the abilities of superheroes are not limited by their gender. Male and Female superheroes have similar physical, mental, and supernatural abilities and however, this may vary depending on the story or what the creators want kind of audience the creators want to target. Our results show that female superheroes are just as powerful as male superheroes.
+
+ Additionally we have also established that female superheroes usually don't need weapons to show their strength and power. Despite this, they still have equal power compared to male superheroes. This shift away from the typical portrayal of any superhero characters that they need assistance or their survival is dependent on the weapons.
+ 
+ This analysis emphasizes the importance of equal treatment of both genders in the world of comic books and superhero stories. It shows that female characters are not weaker or less capable than male characters, and that superheroes can come in all shapes, sizes, and genders, each with their own unique strengths and abilities. It's also important to note that this analysis can serve as a positive representation of women in the media and help to break down gender stereotypes in society. Women are on par with men, even though there are fewer female superheroes. Creators want to create more male characters over females. But the creators that create female superheroes, do give them equal importance to males.  
+
+  
+ 
+  
+  
+
